@@ -4,7 +4,7 @@ from views.landing import *
 from views.home import *
 
 def main():
-    st.set_page_config(page_title="JMCalendar", page_icon=":house:")
+    st.set_page_config(page_title="Road to Cambridge", page_icon=":house:")
 
     if "page" not in st.session_state:
         st.session_state.page = "landing"
