@@ -2,6 +2,7 @@ import os
 import streamlit as st
 from dotenv import load_dotenv
 from openai import OpenAI
+from rag import retrieve_relevant_chunks
 
 load_dotenv()
 client = OpenAI()
@@ -87,8 +88,19 @@ def open_assistant(code):
 def get_hint(code, question, attempt, level):
     notes = load_notes(code)
 
+    # Ground the hint in the notes most relevant to this problem, rather than
+    # dumping the entire notes file into the prompt.
+    query = f"{question}\n{attempt}".strip()
+    relevant_chunks = retrieve_relevant_chunks(code, notes, query)
+    if relevant_chunks:
+        context = "\n\n---\n\n".join(relevant_chunks)
+    else:
+        # Fall back to the raw notes if retrieval found nothing (e.g. no
+        # question/attempt yet, notes too short to chunk, or an API error).
+        context = notes
+
     user_prompt = (
-        f"Lecture notes for context:\n{notes or '(no notes provided)'}\n\n"
+        f"Lecture notes for context:\n{context or '(no notes provided)'}\n\n"
         f"Problem:\n{question or '(not provided)'}\n\n"
         f"Student's current attempt:\n{attempt or '(no attempt yet)'}\n\n"
         f"Give a level {level} hint."
